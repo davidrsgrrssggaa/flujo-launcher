@@ -71,11 +71,11 @@ fun SettingsScreen(prefs: LauncherPrefs, onClose: () -> Unit) {
         Spacer(Modifier.height(12.dp))
 
         SettingRow("Iconos", "Junto al nombre") {
-            FlujoSwitch(prefs.showIcons) { prefs.setShowIcons(it) }
+            FlujoSwitch(prefs.showIcons) { prefs.updateShowIcons(it) }
         }
         SettingRow("Favoritas", null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                StepButton("−") { prefs.setFavCount(prefs.favCount - 1) }
+                StepButton("−") { prefs.updateFavCount(prefs.favCount - 1) }
                 Text(
                     "${prefs.favCount}",
                     color = c.fg,
@@ -83,7 +83,7 @@ fun SettingsScreen(prefs: LauncherPrefs, onClose: () -> Unit) {
                     fontSize = 14.sp,
                     modifier = Modifier.padding(horizontal = 12.dp),
                 )
-                StepButton("+") { prefs.setFavCount(prefs.favCount + 1) }
+                StepButton("+") { prefs.updateFavCount(prefs.favCount + 1) }
             }
         }
         SettingRow("Acento", null) {
@@ -97,7 +97,7 @@ fun SettingsScreen(prefs: LauncherPrefs, onClose: () -> Unit) {
                             .padding(3.dp)
                             .clip(CircleShape)
                             .background(Color(value))
-                            .clickable { prefs.setAccent(value) },
+                            .clickable { prefs.updateAccent(value) },
                     )
                 }
             }
@@ -120,7 +120,7 @@ fun SettingsScreen(prefs: LauncherPrefs, onClose: () -> Unit) {
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .background(if (prefs.themeMode == index) c.line else Color.Transparent)
-                            .clickable { prefs.setThemeMode(index) }
+                            .clickable { prefs.updateThemeMode(index) }
                             .padding(horizontal = 9.dp, vertical = 6.dp),
                     )
                 }
@@ -128,7 +128,7 @@ fun SettingsScreen(prefs: LauncherPrefs, onClose: () -> Unit) {
         }
         SettingRow("Doble toque", "Bloquear pantalla") {
             FlujoSwitch(prefs.doubleTapLock) { on ->
-                prefs.setDoubleTapLock(on)
+                prefs.updateDoubleTapLock(on)
                 if (on && LockService.instance == null) {
                     context.startActivity(
                         Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),

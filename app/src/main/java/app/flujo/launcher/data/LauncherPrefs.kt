@@ -20,11 +20,11 @@ class LauncherPrefs(context: Context) {
 
     val seeded: Boolean get() = sp.getBoolean("seeded", false)
 
-    fun setShowIcons(v: Boolean) { showIcons = v; sp.edit().putBoolean("icons", v).apply() }
-    fun setFavCount(v: Int) { favCount = v.coerceIn(3, 5); sp.edit().putInt("fav_count", favCount).apply() }
-    fun setAccent(v: Long) { accent = v; sp.edit().putLong("accent", v).apply() }
-    fun setThemeMode(v: Int) { themeMode = v; sp.edit().putInt("theme", v).apply() }
-    fun setDoubleTapLock(v: Boolean) { doubleTapLock = v; sp.edit().putBoolean("double_tap", v).apply() }
+    fun updateShowIcons(v: Boolean) { showIcons = v; sp.edit().putBoolean("icons", v).apply() }
+    fun updateFavCount(v: Int) { favCount = v.coerceIn(3, 5); sp.edit().putInt("fav_count", favCount).apply() }
+    fun updateAccent(v: Long) { accent = v; sp.edit().putLong("accent", v).apply() }
+    fun updateThemeMode(v: Int) { themeMode = v; sp.edit().putInt("theme", v).apply() }
+    fun updateDoubleTapLock(v: Boolean) { doubleTapLock = v; sp.edit().putBoolean("double_tap", v).apply() }
 
     fun seedFavorites(list: List<String>) {
         favorites = list
