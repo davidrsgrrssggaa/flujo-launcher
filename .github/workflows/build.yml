@@ -5,6 +5,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,3 +34,10 @@ jobs:
         with:
           name: flujo-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publicar APK en Releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk Flujo.apk
+          gh release delete v1.0 --yes --cleanup-tag || true
+          gh release create v1.0 Flujo.apk --title "Flujo 1.0" --notes "APK de depuración de Flujo. Ábrelo en el móvil para instalarlo."
