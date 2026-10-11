@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Flujo</string>
+    <string name="lock_service_label">Flujo: bloquear con doble toque</string>
+    <string name="lock_service_desc">Permite que Flujo bloquee la pantalla cuando haces doble toque en el inicio. No lee ni guarda nada de la pantalla.</string>
+</resources>
