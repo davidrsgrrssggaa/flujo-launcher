@@ -20,10 +20,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: 8.7
-      - name: Compilar APK de depuración
+      - name: Compilar APK de producción
         run: |
           set +e
-          gradle assembleDebug --no-daemon --console=plain > build.log 2>&1
+          gradle assembleRelease --no-daemon --console=plain > build.log 2>&1
           code=$?
           if [ $code -ne 0 ]; then
             msg=$(grep -E "^e: |What went wrong|Execution failed|Could not|error:" -A2 build.log | head -90 | cut -c1-300 | sed 's/%/%25/g' | sed 's/$/%0A/' | tr -d '\n')
@@ -33,11 +33,11 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: flujo-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/release/app-release.apk
       - name: Publicar APK en Releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp app/build/outputs/apk/debug/app-debug.apk Flujo.apk
-          gh release delete v1.0 --yes --cleanup-tag || true
-          gh release create v1.0 Flujo.apk --title "Flujo 1.0" --notes "APK de depuración de Flujo. Ábrelo en el móvil para instalarlo."
+          cp app/build/outputs/apk/release/app-release.apk Flujo.apk
+          gh release delete v1.1 --yes --cleanup-tag || true
+          gh release create v1.1 Flujo.apk --title "Flujo 1.1" --notes "APK de Flujo (versión optimizada). Ábrelo en el móvil para instalarlo."

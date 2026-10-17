@@ -63,11 +63,14 @@ class MainActivity : ComponentActivity() {
 
     private fun reload() {
         lifecycleScope.launch {
+            // Fase 1: nombres, para que la pantalla aparezca enseguida.
             val list = withContext(Dispatchers.Default) { repo.load() }
             apps = list
             if (!prefs.seeded && list.isNotEmpty()) {
                 prefs.seedFavorites(repo.defaultFavorites(list))
             }
+            // Fase 2: iconos, dibujados una vez y en paralelo.
+            apps = withContext(Dispatchers.Default) { repo.withIcons(list) }
         }
     }
 }

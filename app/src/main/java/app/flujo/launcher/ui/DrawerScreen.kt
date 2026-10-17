@@ -69,8 +69,8 @@ sealed interface DrawerRow {
     data class Item(val app: AppEntry) : DrawerRow
 }
 
-private fun letterOf(label: String): Char {
-    val ch = normalize(label).firstOrNull() ?: return '#'
+private fun letterOf(normLabel: String): Char {
+    val ch = normLabel.firstOrNull() ?: return '#'
     return if (ch in 'a'..'z') ch.uppercaseChar() else '#'
 }
 
@@ -91,7 +91,7 @@ fun DrawerScreen(
             val out = mutableListOf<DrawerRow>()
             var last = ' '
             apps.filter { it.packageName !in prefs.hidden }.forEach { app ->
-                val letter = letterOf(app.label)
+                val letter = letterOf(app.normLabel)
                 if (letter != last) {
                     out += DrawerRow.Header(letter)
                     last = letter
@@ -100,11 +100,14 @@ fun DrawerScreen(
             }
             out
         } else {
-            apps.filter { normalize(it.label).contains(term) }
+            val matches = apps.filter { it.normLabel.contains(term) }
+            // Las veces abierta se leen una sola vez por búsqueda, no en cada comparación.
+            val counts = matches.associate { it.packageName to prefs.count(it.packageName) }
+            matches
                 .sortedWith(
-                    compareByDescending<AppEntry> { normalize(it.label).startsWith(term) }
-                        .thenByDescending { prefs.count(it.packageName) }
-                        .thenBy { normalize(it.label) },
+                    compareByDescending<AppEntry> { it.normLabel.startsWith(term) }
+                        .thenByDescending { counts[it.packageName] ?: 0 }
+                        .thenBy { it.normLabel },
                 )
                 .map { DrawerRow.Item(it) }
         }
@@ -124,7 +127,7 @@ fun DrawerScreen(
         derivedStateOf {
             when (val r = rows.getOrNull(listState.firstVisibleItemIndex)) {
                 is DrawerRow.Header -> r.letter
-                is DrawerRow.Item -> letterOf(r.app.label)
+                is DrawerRow.Item -> letterOf(r.app.normLabel)
                 null -> null
             }
         }

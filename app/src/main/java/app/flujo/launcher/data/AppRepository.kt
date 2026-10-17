@@ -1,43 +1,71 @@
 package app.flujo.launcher.data
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.provider.MediaStore
 import android.provider.Settings
+import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.graphics.drawable.toBitmap
 import java.text.Normalizer
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
+@Immutable
 data class AppEntry(
     val label: String,
+    /** Etiqueta ya sin acentos y en minúsculas, calculada una sola vez para buscar y ordenar. */
+    val normLabel: String,
     val packageName: String,
     val activityName: String,
-    val icon: Drawable?,
+    val icon: ImageBitmap? = null,
 )
 
 /** Minúsculas y sin acentos, para buscar "camara" y encontrar "Cámara". */
 fun normalize(s: String): String =
-    Normalizer.normalize(s, Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "").lowercase()
+    Normalizer.normalize(s, Normalizer.Form.NFD).replace(MARKS, "").lowercase()
+
+private val MARKS = Regex("\\p{Mn}+")
 
 class AppRepository(private val context: Context) {
     private val pm: PackageManager = context.packageManager
 
+    /** Lista rápida: solo nombres, sin iconos. Permite pintar la pantalla enseguida. */
     @Suppress("DEPRECATION")
     fun load(): List<AppEntry> {
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         return pm.queryIntentActivities(intent, 0)
             .filter { it.activityInfo.packageName != context.packageName }
             .map {
+                val label = it.loadLabel(pm).toString()
                 AppEntry(
-                    label = it.loadLabel(pm).toString(),
+                    label = label,
+                    normLabel = normalize(label),
                     packageName = it.activityInfo.packageName,
                     activityName = it.activityInfo.name,
-                    icon = runCatching { it.loadIcon(pm) }.getOrNull(),
                 )
             }
             .distinctBy { it.packageName + "/" + it.activityName }
-            .sortedBy { normalize(it.label) }
+            .sortedBy { it.normLabel }
+    }
+
+    /** Segunda fase: dibuja los iconos una sola vez, en paralelo y fuera del hilo principal. */
+    suspend fun withIcons(apps: List<AppEntry>): List<AppEntry> = coroutineScope {
+        apps.map { app ->
+            async {
+                val bitmap = runCatching {
+                    pm.getActivityIcon(ComponentName(app.packageName, app.activityName))
+                        .toBitmap(ICON_PX, ICON_PX)
+                        .asImageBitmap()
+                }.getOrNull()
+                app.copy(icon = bitmap)
+            }
+        }.awaitAll()
     }
 
     fun launch(app: AppEntry) {
@@ -75,5 +103,9 @@ class AppRepository(private val context: Context) {
             .mapNotNull { pm.resolveActivity(it, PackageManager.MATCH_DEFAULT_ONLY)?.activityInfo?.packageName }
             .filter { it in known }
             .distinct()
+    }
+
+    private companion object {
+        const val ICON_PX = 96
     }
 }
